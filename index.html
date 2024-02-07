@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #data-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        p {
+            margin: 0;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="data-container"></div>
+
+    <script>
+        const url = "https://xzqpphzvbzhzvpke6ojjzvbpjq.appsync-api.ap-southeast-1.amazonaws.com/graphql";
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                // Include any necessary headers, such as authorization if required
+            },
+            body: JSON.stringify({
+                query: `
+                    query {
+                        // Include your GraphQL query here
+                    }
+                `,
+                // Include any variables if required
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById("data-container");
+            container.innerHTML = `
+                <p>ID: ${data.id}</p>
+                <p>Type: ${data.type}</p>
+                <p>Message: ${data.message}</p>
+                <p>Channel ID: ${data.channelId}</p>
+                <p>Created At: ${data.createdAt}</p>
+                <p>Updated At: ${data.updatedAt}</p>
+                <p>User Messages ID: ${data.userMessagesId}</p>
+            `;
+        })
+        .catch(error => console.error(error));
+    </script>
+</body>
+</html>
