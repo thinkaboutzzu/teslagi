@@ -38,15 +38,15 @@ axios
   .then(response => {
     const messages = response.data.data.messagesByUpdateAt.items;
 
-    // Convert messages to JavaScript string
-    const messagesString = `const messages = ${JSON.stringify(messages, null, 2)};`;
+    // Convert messages to JSON string
+    const messagesString = JSON.stringify(messages, null, 2);
 
-    // Write to a JavaScript file (messages.js)
-    fs.writeFile('messages.js', messagesString, 'utf8', err => {
+    // Write to a file (change 'output.json' to your desired file name)
+    fs.writeFile('output.json', messagesString, 'utf8', err => {
       if (err) {
         console.error('Error writing to file:', err);
       } else {
-        console.log('Messages written to messages.js');
+        console.log('Messages written to output.json');
       }
     });
   })
