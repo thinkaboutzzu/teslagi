@@ -1,73 +1,69 @@
-const axios = require('axios');
-const fs = require('fs');
-const express = require('express');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages Display</title>
+</head>
+<body>
 
-const app = express();
-const port = 3000;
+  <div id="messages-container"></div>
 
-const graphqlQuery = `
-  query MessagesByUpdateAt {
-    messagesByUpdateAt(type: "message", sortDirection: DESC, limit: 2000) {
-      items {
-        id
-        message
-        channelId
-        createdAt
-        updatedAt
-        userMessagesId
-        type
-        author {
-          givenName
-          familyName
-          nickname
-          profileImage
-        }
+  <script>
+    // Function to fetch and display messages
+    async function fetchAndDisplayMessages() {
+      try {
+        // Make a request to your GraphQL endpoint
+        const response = await fetch('https://xzqpphzvbzhzvpke6ojjzvbpjq.appsync-api.ap-southeast-1.amazonaws.com/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'da2-e3ybp4cw2vgdlgmie3byhf4ohe',
+          },
+          body: JSON.stringify({ query: `
+            query MessagesByUpdateAt {
+              messagesByUpdateAt(type: "message", sortDirection: DESC, limit: 2000) {
+                items {
+                  id
+                  message
+                  channelId
+                  createdAt
+                  updatedAt
+                  userMessagesId
+                  type
+                  author {
+                    givenName
+                    familyName
+                    nickname
+                    profileImage
+                  }
+                }
+              }
+            }
+          `}),
+        });
+
+        const data = await response.json();
+        const messages = data.data.messagesByUpdateAt.items;
+
+        // Display messages on the web page
+        const messagesContainer = document.getElementById('messages-container');
+        messagesContainer.innerHTML = '<h2>Messages</h2>';
+        
+        messages.forEach(message => {
+          const messageElement = document.createElement('div');
+          messageElement.innerHTML = `<p><strong>${message.author.givenName} ${message.author.familyName}</strong>: ${message.message}</p>`;
+          messagesContainer.appendChild(messageElement);
+        });
+
+      } catch (error) {
+        console.error('Error fetching messages:', error);
       }
     }
-  }
-`;
 
-const headers = {
-  'x-api-key': 'da2-e3ybp4cw2vgdlgmie3byhf4ohe',
-  'Content-Type': 'application/json',
-};
+    // Call the function to fetch and display messages
+    fetchAndDisplayMessages();
+  </script>
 
-const config = {
-  headers: headers,
-  responseType: 'json',
-};
-
-app.get('/', (req, res) => {
-  axios
-    .post('https://xzqpphzvbzhzvpke6ojjzvbpjq.appsync-api.ap-southeast-1.amazonaws.com/graphql', JSON.stringify({ query: graphqlQuery }), config)
-    .then(response => {
-      const messages = response.data.data.messagesByUpdateAt.items;
-
-      // Convert messages to HTML string (customize as needed)
-      const messagesHTML = messages.map(message => `<p>${message.author.givenName}: ${message.message}</p>`).join('');
-
-      // Serve the HTML page
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Messages</title>
-          </head>
-          <body>
-            <h1>Messages</h1>
-            ${messagesHTML}
-          </body>
-        </html>
-      `);
-    })
-    .catch(error => {
-      console.error(error);
-      res.status(500).send('Error fetching data');
-    });
-});
-
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
+</body>
+</html>
