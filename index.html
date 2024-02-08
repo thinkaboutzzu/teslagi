@@ -1,64 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data JSON</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+const axios = require('axios');
+const fs = require('fs');
+const express = require('express');
+
+const app = express();
+const port = 3000;
+
+const graphqlQuery = `
+  query MessagesByUpdateAt {
+    messagesByUpdateAt(type: "message", sortDirection: DESC, limit: 2000) {
+      items {
+        id
+        message
+        channelId
+        createdAt
+        updatedAt
+        userMessagesId
+        type
+        author {
+          givenName
+          familyName
+          nickname
+          profileImage
         }
+      }
+    }
+  }
+`;
 
-        #data-container {
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 8px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
+const headers = {
+  'x-api-key': 'da2-e3ybp4cw2vgdlgmie3byhf4ohe',
+  'Content-Type': 'application/json',
+};
 
-        p {
-            margin: 0;
-            padding: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <div id="data-container"></div>
+const config = {
+  headers: headers,
+  responseType: 'json',
+};
 
-    <script>
-        const url = "https://xzqpphzvbzhzvpke6ojjzvbpjq.appsync-api.ap-southeast-1.amazonaws.com/graphql";
+app.get('/', (req, res) => {
+  axios
+    .post('https://xzqpphzvbzhzvpke6ojjzvbpjq.appsync-api.ap-southeast-1.amazonaws.com/graphql', JSON.stringify({ query: graphqlQuery }), config)
+    .then(response => {
+      const messages = response.data.data.messagesByUpdateAt.items;
 
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                // Include any necessary headers, such as authorization if required
-            },
-            body: JSON.stringify({
-                query: `
-                    query {
-                        // Include your GraphQL query here
-                    }
-                `,
-                // Include any variables if required
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById("data-container");
-            container.innerHTML = `
-                <p>ID: ${data.id}</p>
-                <p>Type: ${data.type}</p>
-                <p>Message: ${data.message}</p>
-                <p>Channel ID: ${data.channelId}</p>
-                <p>Created At: ${data.createdAt}</p>
-                <p>Updated At: ${data.updatedAt}</p>
-                <p>User Messages ID: ${data.userMessagesId}</p>
-            `;
-        })
-        .catch(error => console.error(error));
-    </script>
-</body>
-</html>
+      // Convert messages to HTML string (customize as needed)
+      const messagesHTML = messages.map(message => `<p>${message.author.givenName}: ${message.message}</p>`).join('');
+
+      // Serve the HTML page
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Messages</title>
+          </head>
+          <body>
+            <h1>Messages</h1>
+            ${messagesHTML}
+          </body>
+        </html>
+      `);
+    })
+    .catch(error => {
+      console.error(error);
+      res.status(500).send('Error fetching data');
+    });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
